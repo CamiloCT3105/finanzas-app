@@ -21,7 +21,10 @@ async function main() {
   const sql = await readFile(new URL('./schema.sql', import.meta.url), 'utf8');
   await cliente.query(sql);
   await cliente.end();
-  console.log('Tablas listas: usuarios, categorias, ingresos, gastos, metas.');
+  console.log(
+    'Tablas listas: usuarios, categorias, ingresos, gastos, metas, aportes, retos, retos_usuario, logros, ' +
+      'logros_usuario, actividad_usuarios, solicitudes_soporte y soporte_seguimiento.',
+  );
 }
 
 main().catch((error) => {
