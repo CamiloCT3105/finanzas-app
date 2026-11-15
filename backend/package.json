@@ -8,6 +8,7 @@
     "build": "tsc && node -e \"require('fs').copyFileSync('src/db/schema.sql','dist/db/schema.sql')\"",
     "start": "node dist/app.js",
     "db:init": "tsx src/db/init.ts",
+    "db:admin": "tsx src/db/admin.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

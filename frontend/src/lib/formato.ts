@@ -16,6 +16,40 @@ export function moneda(valor: number, conSigno = false): string {
   return conSigno && valor > 0 ? `+${texto}` : texto;
 }
 
+/** 20 → "20 %", 12.5 → "12,5 %" */
+export function porcentaje(valor: number): string {
+  const redondeado = Math.round(valor * 10) / 10;
+  return `${String(redondeado).replace('.', ',')} %`;
+}
+
+/** $1.250.000 → "$1,3 M"; útil en ejes de gráficas con poco espacio. */
+export function monedaCorta(valor: number): string {
+  const abs = Math.abs(valor);
+  if (abs >= 1_000_000) return `$${String(Math.round(valor / 100_000) / 10).replace('.', ',')} M`;
+  if (abs >= 1_000) return `$${Math.round(valor / 1_000)} mil`;
+  return moneda(valor);
+}
+
+/** "2026-10" → "oct 2026" */
+export function mesCorto(mes: string): string {
+  const [anio, numero] = mes.split('-').map(Number) as [number, number];
+  return `${MESES_CORTOS[numero - 1]} ${anio}`;
+}
+
+/** "noviembre de 2027" para la fecha estimada de una meta */
+export function mesYAnio(iso: string): string {
+  const [anio, mes] = iso.split('-').map(Number) as [number, number];
+  return `${MESES[mes - 1]} de ${anio}`;
+}
+
+/** Días entre hoy y una fecha AAAA-MM-DD (positivo si es futura). */
+export function diasHasta(iso: string): number {
+  const [a, m, d] = iso.split('-').map(Number) as [number, number, number];
+  const objetivo = new Date(a, m - 1, d).getTime();
+  const hoy = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+  return Math.round((objetivo - hoy) / 86_400_000);
+}
+
 /**
  * Convierte lo que escribe el usuario en un número. Acepta "1500000", "1.500.000" y "1500000,50".
  * Devuelve null si hay letras, está vacío o no es un número válido (CA-08).

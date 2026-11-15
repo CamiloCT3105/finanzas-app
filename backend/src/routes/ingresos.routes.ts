@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool } from '../config/db.js';
 import { idUsuario, requiereAuth } from '../middleware/auth.js';
+import { otorgarLogros } from '../services/logros.js';
 import { asincrono, ErrorApi } from '../utils/errores.js';
 import { fechaValida, idValido, lanzarSiHayErrores, rangoMes, texto, valorPositivo } from '../utils/validaciones.js';
 
@@ -53,7 +54,8 @@ ingresosRouter.post(
        RETURNING ${COLUMNAS}`,
       [idUsuario(req), ingreso.valor, ingreso.tipo, ingreso.descripcion, ingreso.fecha],
     );
-    res.status(201).json(rows[0]);
+    const logros = await otorgarLogros(pool, idUsuario(req), ['primer_ingreso']);
+    res.status(201).json({ ...rows[0], logros });
   }),
 );
 
