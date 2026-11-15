@@ -22,7 +22,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colores.primario,
         tabBarInactiveTintColor: colores.textoTenue,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarStyle: {
           backgroundColor: colores.tarjeta,
           borderTopColor: colores.borde,
@@ -39,8 +39,9 @@ export default function TabsLayout() {
         name="movimientos"
         options={{ title: 'Movimientos', tabBarIcon: icono('swap-vertical', 'swap-vertical-outline') }}
       />
+      <Tabs.Screen name="analisis" options={{ title: 'Análisis', tabBarIcon: icono('pie-chart', 'pie-chart-outline') }} />
       <Tabs.Screen name="metas" options={{ title: 'Metas', tabBarIcon: icono('flag', 'flag-outline') }} />
-      <Tabs.Screen name="perfil" options={{ title: 'Perfil', tabBarIcon: icono('person', 'person-outline') }} />
+      <Tabs.Screen name="retos" options={{ title: 'Retos', tabBarIcon: icono('trophy', 'trophy-outline') }} />
     </Tabs>
   );
 }

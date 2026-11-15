@@ -20,6 +20,35 @@ Aplicación móvil de finanzas personales.
 | HU-09 Ver dinero disponible | Ingresos − gastos del mes, con aviso si el saldo es negativo. |
 | HU-15 Crear meta de ahorro | Meta con nombre, valor objetivo, fecha límite y descripción opcionales. |
 
+## Sprint 2 — historias implementadas
+
+| Historia | Qué hace |
+| --- | --- |
+| HU-10 Ver capacidad de ahorro | (ingresos − gastos) ÷ ingresos × 100 del mes; mensaje si no hay ingresos. |
+| HU-11 Ver dashboard financiero | Inicio con ingreso, gastos, disponible, ahorro del mes, capacidad, racha y progreso de metas. |
+| HU-12 Ver resumen mensual | Pestaña Análisis: totales, disponible, ahorro y avance de metas del mes elegido. |
+| HU-13 Ver gráficas de gastos | Gráfica de dona con el porcentaje de cada categoría. |
+| HU-14 Comparar meses | Gastos del mes contra el mes anterior, con diferencia, porcentaje e indicador. |
+| HU-16 Calcular meses para la meta | (objetivo − ahorrado) ÷ capacidad mensual, redondeado hacia arriba, con fecha aproximada. |
+| HU-17 Registrar ahorro | Aporte a una meta en una transacción; la meta se marca cumplida al llegar al objetivo. |
+| HU-18 Ver progreso de metas | Restante, porcentaje, barra de avance, tiempo estimado e historial de aportes. |
+| HU-19 Elegir un reto de ahorro | Catálogo de retos; un reto activo a la vez con su fecha de fin. |
+| HU-20 Registrar gasto evitado | El dinero que no se gastó se suma a una meta como aporte `gasto_evitado`. |
+| HU-21 Completar un reto | Avances que suman a una meta; se marca cumplido dentro del plazo o queda no cumplido al vencer. |
+| HU-22 Ver mi racha de ahorro | Días seguidos con aportes; se reinicia tras un día completo sin ahorrar. |
+| HU-23 Obtener logros | 7 logros que se otorgan una sola vez, con notificación al desbloquearlos. |
+| HU-24 a HU-34 Administración | Panel para administradores: dashboard, usuarios (buscar, activar/desactivar, rol), detalle sin datos financieros, categorías, retos, actividad, reportes y solicitudes de soporte. |
+
+### Crear el primer administrador
+
+Regístrate en la app y luego, en la carpeta `backend`:
+
+```bash
+npm run db:admin -- tucorreo@ejemplo.com
+```
+
+Al iniciar sesión con esa cuenta entras directamente al panel administrativo. Desde ahí puedes asignar el rol de administrador a otras cuentas.
+
 ## Cómo ejecutarlo
 
 Requisitos: Node.js 20+, PostgreSQL y, para el celular, la app **Expo Go**.
@@ -63,4 +92,36 @@ Todas las rutas, salvo `/api/auth/*`, requieren `Authorization: Bearer <token>`.
 | GET / POST | `/api/gastos?mes=AAAA-MM&tipo=fijo\|variable` | Listar / registrar gastos |
 | PUT / DELETE | `/api/gastos/:id` | Editar / eliminar gasto |
 | GET | `/api/resumen/disponible?mes=AAAA-MM` | Dinero disponible del mes |
-| GET / POST | `/api/metas` | Listar / crear metas |
+| GET | `/api/resumen/capacidad?mes=AAAA-MM` | Capacidad de ahorro |
+| GET | `/api/resumen/dashboard?mes=AAAA-MM` | Resumen de la pantalla principal |
+| GET | `/api/resumen/mensual?mes=AAAA-MM` | Resumen del mes con gastos por categoría |
+| GET | `/api/resumen/comparacion?mes=AAAA-MM` | Gastos del mes contra el mes anterior |
+| GET / POST | `/api/metas` | Listar (con progreso y tiempo estimado) / crear metas |
+| GET | `/api/metas/:id` | Detalle de una meta con sus aportes |
+| POST | `/api/metas/:id/aportes` | Registrar ahorro en una meta |
+| POST | `/api/metas/gasto-evitado` | Registrar un gasto evitado |
+| GET | `/api/retos` | Retos disponibles, reto activo e historial |
+| POST | `/api/retos/:id/iniciar` | Iniciar un reto |
+| POST | `/api/retos/activo/avance` | Registrar avance del reto activo |
+| POST | `/api/retos/activo/completar` | Marcar el reto como cumplido |
+| POST | `/api/retos/activo/abandonar` | Abandonar el reto activo |
+| GET | `/api/motivacion/racha` | Racha de ahorro |
+| GET | `/api/motivacion/logros` | Logros obtenidos y pendientes |
+| GET / POST | `/api/soporte` | Mis solicitudes de soporte / enviar una |
+
+### Administración (solo rol administrador)
+
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| GET | `/api/admin/dashboard` | Indicadores generales |
+| GET | `/api/admin/usuarios?buscar=&pagina=` | Usuarios paginados con búsqueda |
+| GET | `/api/admin/usuarios/:id` | Datos generales y actividad de una cuenta |
+| PATCH | `/api/admin/usuarios/:id/estado` | Activar o desactivar una cuenta |
+| PATCH | `/api/admin/usuarios/:id/rol` | Asignar rol |
+| GET / POST | `/api/admin/categorias` | Listar / crear categorías |
+| PUT / PATCH | `/api/admin/categorias/:id` · `/:id/estado` | Editar / activar o desactivar |
+| GET / POST | `/api/admin/retos` | Listar / crear retos |
+| PUT / PATCH | `/api/admin/retos/:id` · `/:id/estado` | Editar / activar o desactivar |
+| GET | `/api/admin/actividad?desde=&hasta=` | Actividad por día |
+| GET | `/api/admin/reportes?desde=&hasta=` | Usuarios y participación en retos |
+| GET / PATCH | `/api/admin/soporte/:id` | Detalle / cambiar estado con anotación |
