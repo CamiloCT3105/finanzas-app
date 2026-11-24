@@ -5,7 +5,7 @@ Arquitectura en la nube (todo con plan gratuito):
 | Pieza | Servicio | Qué es |
 | --- | --- | --- |
 | Base de datos | **Neon** (PostgreSQL) | Gratis y no expira |
-| API (`backend/`) | **Render** – Web Service | `https://finanzas-app-api.onrender.com/api` |
+| API (`backend/`) | **Render** – Web Service | `https://finanzas-app-api-n6hp.onrender.com/api` |
 | App web (`frontend/`) | **Render** – Static Site | `https://finanzas-app-web.onrender.com` |
 | App Android (APK) | **EAS Build** (Expo) | Archivo `.apk` para instalar en el celular |
 
@@ -35,7 +35,7 @@ Arquitectura en la nube (todo con plan gratuito):
    Render lee `render.yaml` y propone dos servicios: `finanzas-app-api` y `finanzas-app-web`.
 3. Te pedirá **DATABASE_URL**: pega la cadena de Neon. `JWT_SECRET` se genera solo.
 4. **Apply**. Espera a que los dos queden en verde (5–10 min la primera vez).
-5. Comprueba la API: abre `https://finanzas-app-api.onrender.com/api/salud` → `{"estado":"ok"}`.
+5. Comprueba la API: abre `https://finanzas-app-api-n6hp.onrender.com/api/salud` → `{"estado":"ok"}`.
 6. Abre `https://finanzas-app-web.onrender.com`, crea tu cuenta y úsala.
 
 > Plan gratuito: la API se "duerme" tras 15 min sin uso; la primera petición tarda ~50 s en despertar.
