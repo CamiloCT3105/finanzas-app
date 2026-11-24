@@ -37,4 +37,4 @@ services:
         destination: /index.html
     envVars:
       - key: EXPO_PUBLIC_API_URL
-        value: https://finanzas-app-api.onrender.com/api
+        value: https://finanzas-app-api-n6hp.onrender.com/api
