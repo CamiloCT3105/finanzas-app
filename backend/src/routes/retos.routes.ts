@@ -128,11 +128,13 @@ retosRouter.post(
       throw new ErrorApi(400, `Aún no cumples el objetivo: te faltan $${Math.ceil(falta).toLocaleString('es-CO')}.`);
     }
     const resultado = await enTransaccion(async (cliente) => {
-      await cliente.query(
+      const actualizado = await cliente.query(
         `UPDATE retos_usuario SET estado = 'cumplido', fecha_cumplimiento = CURRENT_DATE
-         WHERE id = $1 AND fecha_fin >= CURRENT_DATE`,
+         WHERE id = $1 AND estado = 'activo' AND fecha_fin >= CURRENT_DATE`,
         [activo.id],
       );
+      // Si el plazo venció justo en este momento (medianoche) no se otorga el logro.
+      if (!actualizado.rowCount) throw new ErrorApi(409, 'El plazo del reto ya terminó.');
       return otorgarLogros(cliente, id, ['reto_cumplido']);
     });
     const { rows } = await pool.query(`${SELECT_RETO_USUARIO} WHERE ru.id = $1`, [activo.id]);

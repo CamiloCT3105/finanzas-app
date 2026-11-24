@@ -12,12 +12,21 @@ export function esCorreo(valor: string) {
   return CORREO.test(valor);
 }
 
-/** Valor monetario: numérico y mayor que cero (CA-08, CA-10). Acepta number o string sin letras. */
+/** Máximo que cabe en las columnas NUMERIC(14,2): evita errores 500 con valores gigantes. */
+export const VALOR_MAXIMO = 999_999_999_999.99;
+
+/** Valor monetario: numérico, mayor que cero y hasta VALOR_MAXIMO (CA-08, CA-10). Acepta number o string sin letras. */
 export function valorPositivo(valor: unknown): number | null {
-  if (typeof valor === 'number') return Number.isFinite(valor) && valor > 0 ? valor : null;
-  if (typeof valor !== 'string' || !/^\d+(\.\d{1,2})?$/.test(valor.trim())) return null;
-  const numero = Number(valor);
-  return numero > 0 ? numero : null;
+  let numero: number;
+  if (typeof valor === 'number') {
+    if (!Number.isFinite(valor)) return null;
+    numero = Math.round(valor * 100) / 100;
+  } else if (typeof valor === 'string' && /^\d+(\.\d{1,2})?$/.test(valor.trim())) {
+    numero = Number(valor);
+  } else {
+    return null;
+  }
+  return numero > 0 && numero <= VALOR_MAXIMO ? numero : null;
 }
 
 export function fechaValida(valor: unknown): string | null {
