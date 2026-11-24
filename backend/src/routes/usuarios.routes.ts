@@ -38,11 +38,19 @@ usuariosRouter.put(
       throw new ErrorApi(409, 'Este correo ya está registrado.', { correo: 'Este correo ya está registrado.' });
     }
 
-    const { rows } = await pool.query(
-      `UPDATE usuarios SET nombre = $1, correo = $2 WHERE id = $3 RETURNING ${COLUMNAS_PUBLICAS}`,
-      [nombre, correo, id],
-    );
-    if (!rows[0]) throw new ErrorApi(404, 'No encontramos tu cuenta.');
-    res.json(rows[0]);
+    try {
+      const { rows } = await pool.query(
+        `UPDATE usuarios SET nombre = $1, correo = $2 WHERE id = $3 RETURNING ${COLUMNAS_PUBLICAS}`,
+        [nombre, correo, id],
+      );
+      if (!rows[0]) throw new ErrorApi(404, 'No encontramos tu cuenta.');
+      res.json(rows[0]);
+    } catch (error) {
+      // Dos cuentas cambiando al mismo correo a la vez: la restricción UNIQUE lo impide.
+      if ((error as { code?: string }).code === '23505') {
+        throw new ErrorApi(409, 'Este correo ya está registrado.', { correo: 'Este correo ya está registrado.' });
+      }
+      throw error;
+    }
   }),
 );

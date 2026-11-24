@@ -77,6 +77,11 @@ npx expo start
 La app detecta sola la IP del computador para conectarse a la API. Si necesitas otra URL, crea
 `frontend/.env` con `EXPO_PUBLIC_API_URL=http://TU_IP:3000/api`.
 
+## Despliegue en la nube
+
+La API va en Render, la base de datos en Neon y la app web en Render (sitio estático).
+La guía paso a paso está en [DESPLIEGUE.md](DESPLIEGUE.md) y la configuración en [render.yaml](render.yaml).
+
 ## Endpoints
 
 Todas las rutas, salvo `/api/auth/*`, requieren `Authorization: Bearer <token>`.
