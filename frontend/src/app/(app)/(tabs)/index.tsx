@@ -12,19 +12,19 @@ import { SelectorMes } from '@/components/SelectorMes';
 import { useSesion } from '@/context/sesion';
 import { useDatos } from '@/hooks/useDatos';
 import { api } from '@/lib/api';
-import { iniciales, mesActual, moneda, nombreMes } from '@/lib/formato';
+import { iniciales, mesActual, moneda, nombreMes, porcentaje } from '@/lib/formato';
 import { rutaEdicion } from '@/lib/rutas';
-import type { Gasto, Ingreso, ResumenDisponible } from '@/lib/tipos';
+import type { Dashboard, Gasto, Ingreso } from '@/lib/tipos';
 import { colores, degradadoNegativo, degradadoSaldo, espacio, radio, sombra } from '@/theme';
 
 const ACCIONES: { titulo: string; icono: ComponentProps<typeof Ionicons>['name']; color: string; fondo: string; ruta: Href }[] = [
   { titulo: 'Ingreso', icono: 'arrow-down-circle', color: colores.ingreso, fondo: colores.ingresoSuave, ruta: '/ingreso' },
   { titulo: 'Gasto fijo', icono: 'repeat', color: '#7C3AED', fondo: '#EDE9FE', ruta: { pathname: '/gasto', params: { tipo: 'fijo' } } },
   { titulo: 'Gasto variable', icono: 'cart', color: colores.gasto, fondo: colores.gastoSuave, ruta: { pathname: '/gasto', params: { tipo: 'variable' } } },
-  { titulo: 'Meta', icono: 'flag', color: colores.info, fondo: colores.infoSuave, ruta: '/meta' },
+  { titulo: 'Gasto evitado', icono: 'shield-checkmark', color: colores.info, fondo: colores.infoSuave, ruta: '/gasto-evitado' },
 ];
 
-// HU-09: pantalla principal con el dinero disponible del mes.
+// HU-09 y HU-11: pantalla principal con el resumen financiero del mes.
 export default function Inicio() {
   const { usuario } = useSesion();
   const { width } = useWindowDimensions();
@@ -32,7 +32,7 @@ export default function Inicio() {
 
   const { datos, error, cargando, refrescando, recargar } = useDatos(async () => {
     const [resumen, ingresos, gastos] = await Promise.all([
-      api.get<ResumenDisponible>(`/resumen/disponible?mes=${mes}`),
+      api.get<Dashboard>(`/resumen/dashboard?mes=${mes}`),
       api.get<Ingreso[]>(`/ingresos?mes=${mes}`),
       api.get<Gasto[]>(`/gastos?mes=${mes}`),
     ]);
@@ -59,7 +59,17 @@ export default function Inicio() {
             {usuario?.nombre.split(' ')[0]} 👋
           </Text>
         </View>
-        <Pressable onPress={() => router.navigate('/perfil')} style={estilos.avatar} accessibilityLabel="Ir a mi perfil">
+        {resumen && resumen.racha > 0 ? (
+          <Pressable
+            onPress={() => router.navigate('/retos')}
+            style={estilos.racha}
+            accessibilityLabel={`Racha de ahorro: ${resumen.racha} días`}
+          >
+            <Ionicons name="flame" size={16} color="#EA580C" />
+            <Text style={estilos.rachaTexto}>{resumen.racha}</Text>
+          </Pressable>
+        ) : null}
+        <Pressable onPress={() => router.push('/perfil')} style={estilos.avatar} accessibilityRole="button" accessibilityLabel="Ir a mi perfil">
           <Text style={estilos.avatarTexto}>{iniciales(usuario?.nombre ?? '')}</Text>
         </Pressable>
       </View>
@@ -124,6 +134,7 @@ export default function Inicio() {
         ))}
       </View>
 
+      {/* CA-22: usuario sin datos → guía para registrar el primer ingreso */}
       {datos && resumen?.movimientos === 0 ? (
         <EstadoVacio
           icono="sparkles"
@@ -135,6 +146,65 @@ export default function Inicio() {
           }
           {...(mes === mesActual() ? { accion: { titulo: 'Registrar mi ingreso', onPress: () => router.push('/ingreso') } } : {})}
         />
+      ) : null}
+
+      {/* HU-11 (CA-21): ahorro del mes, capacidad de ahorro y progreso de metas */}
+      {resumen && !resumen.vacio ? (
+        <View style={estilos.indicadores}>
+          <Pressable
+            style={[estilos.indicador, { backgroundColor: colores.primarioSuave }]}
+            onPress={() => router.navigate('/metas')}
+            accessibilityLabel={`Ahorrado este mes: ${moneda(resumen.ahorro)}`}
+          >
+            <Ionicons name="wallet" size={20} color={colores.primario} />
+            <Text style={estilos.indicadorEtiqueta}>Ahorrado este mes</Text>
+            <Text style={[estilos.indicadorValor, { color: colores.primario }]} numberOfLines={1}>
+              {moneda(resumen.ahorro)}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[estilos.indicador, { backgroundColor: colores.infoSuave }]}
+            onPress={() => router.navigate('/analisis')}
+            accessibilityLabel="Ver capacidad de ahorro"
+          >
+            <Ionicons name="trending-up" size={20} color={colores.info} />
+            <Text style={estilos.indicadorEtiqueta}>Capacidad de ahorro</Text>
+            <Text style={[estilos.indicadorValor, { color: colores.info }]} numberOfLines={1}>
+              {resumen.capacidad.porcentaje === null ? '—' : porcentaje(resumen.capacidad.porcentaje)}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {resumen && resumen.metas.length > 0 ? (
+        <View style={estilos.tarjeta}>
+          <View style={estilos.tarjetaCabecera}>
+            <Text style={estilos.tarjetaTitulo}>Tus metas</Text>
+            <Pressable onPress={() => router.navigate('/metas')} hitSlop={8}>
+              <Text style={estilos.verTodo}>Ver todas</Text>
+            </Pressable>
+          </View>
+          {resumen.metas.map((m) => (
+            <Pressable
+              key={m.id}
+              style={estilos.metaFila}
+              onPress={() => router.push({ pathname: '/meta/[id]', params: { id: m.id } })}
+              accessibilityLabel={`${m.nombre}: ${m.porcentaje} %`}
+            >
+              <View style={estilos.metaTextos}>
+                <Text style={estilos.metaNombre} numberOfLines={1}>
+                  {m.estado === 'cumplida' ? '✅ ' : ''}
+                  {m.nombre}
+                </Text>
+                <Text style={estilos.metaPorcentaje}>{m.porcentaje} %</Text>
+              </View>
+              <BarraProgreso porcentaje={m.porcentaje} color={m.estado === 'cumplida' ? colores.ingreso : colores.primario} />
+              <Text style={estilos.metaDetalle}>
+                {moneda(m.valor_ahorrado)} de {moneda(m.valor_objetivo)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       ) : null}
 
       {resumen && resumen.movimientos > 0 ? (
@@ -226,6 +296,27 @@ const estilos = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarTexto: { fontSize: 16, fontWeight: '800', color: colores.primario },
+  racha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: espacio.md,
+    height: 36,
+    borderRadius: radio.total,
+    backgroundColor: '#FFEDD5',
+    marginRight: espacio.sm,
+  },
+  rachaTexto: { fontSize: 15, fontWeight: '800', color: '#EA580C' },
+
+  indicadores: { flexDirection: 'row', gap: espacio.md, marginBottom: espacio.lg },
+  indicador: { flex: 1, borderRadius: radio.lg, padding: espacio.lg, gap: 4 },
+  indicadorEtiqueta: { fontSize: 13, color: colores.textoSuave, fontWeight: '600', marginTop: espacio.xs },
+  indicadorValor: { fontSize: 20, fontWeight: '800' },
+  metaFila: { paddingVertical: espacio.sm, gap: 6 },
+  metaTextos: { flexDirection: 'row', justifyContent: 'space-between', gap: espacio.sm },
+  metaNombre: { flex: 1, fontSize: 15, fontWeight: '700', color: colores.texto },
+  metaPorcentaje: { fontSize: 14, fontWeight: '800', color: colores.primario },
+  metaDetalle: { fontSize: 13, color: colores.textoSuave },
 
   saldo: { borderRadius: radio.xl, padding: espacio.xl, ...sombra },
   saldoCabecera: {

@@ -1,0 +1,199 @@
+=====================================================================
+  FINANZAS APP - SPRINT 1
+  Script SQL de la base de datos y comandos para correr el proyecto
+=====================================================================
+
+Proyecto: C:\finanzas-app
+  - backend\   API REST en Node.js + Express + PostgreSQL
+  - frontend\  App en React Native con Expo (Android, iOS y web)
+
+
+---------------------------------------------------------------------
+1. SCRIPT SQL (PostgreSQL)
+---------------------------------------------------------------------
+
+Archivo original: backend\src\db\schema.sql
+
+NOTA: En este computador la base "finanzas_app" y sus tablas YA estan
+creadas. Este script sirve para montarla en otro computador.
+
+Opcion A (automatica): dentro de la carpeta backend ejecutar
+    npm run db:init
+  Crea la base de datos y todas las tablas.
+
+Opcion B (manual, en pgAdmin o psql):
+  Paso 1. Crear la base de datos:
+
+    CREATE DATABASE finanzas_app;
+
+  Paso 2. Conectarse a finanzas_app y ejecutar todo lo siguiente:
+
+-- Esquema de la base de datos de Finanzas App (Sprint 1)
+-- Se puede ejecutar varias veces: solo crea lo que no existe.
+
+-- HU-01 / HU-02 / HU-03: cuenta de usuario
+CREATE TABLE IF NOT EXISTS usuarios (
+  id              SERIAL PRIMARY KEY,
+  nombre          VARCHAR(100) NOT NULL,
+  correo          VARCHAR(150) NOT NULL UNIQUE,
+  contrasena      VARCHAR(255) NOT NULL,          -- hash bcrypt
+  rol             VARCHAR(20)  NOT NULL DEFAULT 'usuario'
+                    CHECK (rol IN ('usuario', 'administrador')),
+  estado          VARCHAR(20)  NOT NULL DEFAULT 'activo'
+                    CHECK (estado IN ('activo', 'inactivo')),
+  fecha_registro  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- HU-07: categorías de gastos
+CREATE TABLE IF NOT EXISTS categorias (
+  id           SERIAL PRIMARY KEY,
+  nombre       VARCHAR(60)  NOT NULL UNIQUE,
+  descripcion  VARCHAR(255),
+  estado       VARCHAR(20)  NOT NULL DEFAULT 'activo'
+                 CHECK (estado IN ('activo', 'inactivo'))
+);
+
+INSERT INTO categorias (nombre, descripcion) VALUES
+  ('Vivienda',        'Arriendo, administración, hipoteca'),
+  ('Alimentación',    'Mercado, restaurantes, domicilios'),
+  ('Transporte',      'Pasajes, gasolina, parqueadero'),
+  ('Servicios',       'Agua, luz, gas, internet, celular'),
+  ('Entretenimiento', 'Salidas, streaming, hobbies'),
+  ('Salud',           'Medicamentos, citas, seguros'),
+  ('Educación',       'Matrículas, cursos, libros'),
+  ('Otros',           'Gastos que no encajan en otra categoría')
+ON CONFLICT (nombre) DO NOTHING;
+
+-- HU-04: ingresos
+CREATE TABLE IF NOT EXISTS ingresos (
+  id           SERIAL PRIMARY KEY,
+  id_usuario   INTEGER       NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  valor        NUMERIC(14,2) NOT NULL CHECK (valor > 0),
+  tipo         VARCHAR(30)   NOT NULL
+                 CHECK (tipo IN ('salario', 'independiente', 'negocio', 'pension', 'otro')),
+  descripcion  VARCHAR(150),
+  fecha        DATE          NOT NULL DEFAULT CURRENT_DATE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ingresos_usuario_fecha ON ingresos (id_usuario, fecha);
+
+-- HU-05 / HU-06 / HU-07: gastos fijos y variables
+CREATE TABLE IF NOT EXISTS gastos (
+  id            SERIAL PRIMARY KEY,
+  id_usuario    INTEGER       NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  id_categoria  INTEGER       NOT NULL REFERENCES categorias(id),
+  valor         NUMERIC(14,2) NOT NULL CHECK (valor > 0),
+  tipo          VARCHAR(10)   NOT NULL CHECK (tipo IN ('fijo', 'variable')),
+  descripcion   VARCHAR(150),
+  fecha         DATE          NOT NULL DEFAULT CURRENT_DATE
+);
+
+CREATE INDEX IF NOT EXISTS idx_gastos_usuario_fecha ON gastos (id_usuario, fecha);
+
+-- HU-15: metas de ahorro
+CREATE TABLE IF NOT EXISTS metas (
+  id               SERIAL PRIMARY KEY,
+  id_usuario       INTEGER       NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  nombre           VARCHAR(100)  NOT NULL,
+  valor_objetivo   NUMERIC(14,2) NOT NULL CHECK (valor_objetivo > 0),
+  valor_ahorrado   NUMERIC(14,2) NOT NULL DEFAULT 0 CHECK (valor_ahorrado >= 0),
+  fecha_limite     DATE,
+  descripcion      VARCHAR(255),
+  estado           VARCHAR(20)   NOT NULL DEFAULT 'activa'
+                     CHECK (estado IN ('activa', 'cumplida', 'cancelada')),
+  fecha_creacion   TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_metas_usuario ON metas (id_usuario);
+
+
+---------------------------------------------------------------------
+2. COMANDOS PARA CORRER EL PROYECTO (uso diario)
+---------------------------------------------------------------------
+
+Se necesitan DOS terminales abiertas al mismo tiempo.
+
+TERMINAL 1 - Backend (API)
+
+    cd C:\finanzas-app\backend
+    npm run dev
+
+  Debe aparecer:
+    API de Finanzas App escuchando en http://localhost:3000/api
+
+TERMINAL 2 - Frontend (App)
+
+    cd C:\finanzas-app\frontend
+    npx expo start
+
+  Cuando aparezca el codigo QR:
+    - Celular: escanearlo con la app "Expo Go" (el celular debe estar
+      en la misma red Wi-Fi que el computador).
+    - Navegador: presionar la tecla  w
+    - Emulador Android (si hay uno abierto): presionar la tecla  a
+
+  Para detener cualquiera de los dos: Ctrl + C en su terminal.
+
+
+---------------------------------------------------------------------
+3. PRIMERA VEZ EN OTRO COMPUTADOR
+---------------------------------------------------------------------
+
+Requisitos: Node.js 20 o superior, PostgreSQL y Git.
+
+Paso 1. Descargar el codigo:
+
+    git clone https://github.com/CamiloCT3105/finanzas-app.git
+    cd finanzas-app
+    git switch feature/sprint-1
+
+  (Cuando el pull request #1 se fusione a main, ya no hace falta el
+   "git switch".)
+
+Paso 2. Backend:
+
+    cd backend
+    npm install
+    copy .env.example .env
+
+  Abrir el archivo .env y completar:
+    DB_PASSWORD=  la contrasena del usuario postgres
+    JWT_SECRET=   una cadena larga cualquiera (ej. 40 letras y numeros)
+
+  Crear la base de datos y las tablas:
+
+    npm run db:init
+
+  Arrancar la API:
+
+    npm run dev
+
+Paso 3. Frontend (en otra terminal):
+
+    cd frontend
+    npm install
+    npx expo start
+
+
+---------------------------------------------------------------------
+4. OTROS COMANDOS UTILES
+---------------------------------------------------------------------
+
+Backend (dentro de la carpeta backend):
+    npm run dev         Arranca la API y la reinicia al guardar cambios
+    npm run db:init     Crea la base de datos y las tablas
+    npm run typecheck   Revisa errores de TypeScript
+    npm run build       Compila a JavaScript en la carpeta dist
+    npm start           Corre la version compilada (despues de build)
+
+Frontend (dentro de la carpeta frontend):
+    npx expo start            Arranca la app
+    npx expo start --clear    Arranca limpiando la cache (si algo se ve raro)
+    npx tsc --noEmit          Revisa errores de TypeScript
+    npx expo-doctor           Revisa problemas de configuracion de Expo
+
+Git (dentro de C:\finanzas-app):
+    git pull            Trae los cambios nuevos del repositorio
+
+
+

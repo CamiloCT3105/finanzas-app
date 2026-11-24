@@ -62,8 +62,9 @@ async function peticion<T>(metodo: string, ruta: string, cuerpo?: unknown): Prom
 
 export const api = {
   get: <T>(ruta: string) => peticion<T>('GET', ruta),
-  post: <T>(ruta: string, cuerpo: unknown) => peticion<T>('POST', ruta, cuerpo),
+  post: <T>(ruta: string, cuerpo?: unknown) => peticion<T>('POST', ruta, cuerpo),
   put: <T>(ruta: string, cuerpo: unknown) => peticion<T>('PUT', ruta, cuerpo),
+  patch: <T>(ruta: string, cuerpo: unknown) => peticion<T>('PATCH', ruta, cuerpo),
   delete: (ruta: string) => peticion<void>('DELETE', ruta),
 };
 

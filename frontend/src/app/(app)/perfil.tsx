@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Aviso } from '@/components/Aviso';
@@ -49,9 +50,7 @@ export default function Perfil() {
   };
 
   return (
-    <Pantalla>
-      <Text style={estilos.titulo}>Mi perfil</Text>
-
+    <Pantalla bordes={['bottom']}>
       <LinearGradient colors={degradadoSaldo} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={estilos.tarjetaUsuario}>
         <View style={estilos.avatar}>
           <Text style={estilos.avatarTexto}>{iniciales(usuario.nombre)}</Text>
@@ -102,6 +101,12 @@ export default function Perfil() {
       </View>
 
       <View style={estilos.tarjeta}>
+        <Text style={estilos.seccion}>Ayuda</Text>
+        <Text style={estilos.nota}>¿Algo no funciona como esperabas? Envía una solicitud al equipo de soporte.</Text>
+        <Boton titulo="Ayuda y soporte" variante="secundario" icono="help-buoy-outline" onPress={() => router.push('/soporte')} />
+      </View>
+
+      <View style={estilos.tarjeta}>
         <Text style={estilos.seccion}>Seguridad</Text>
         <Text style={estilos.nota}>
           Al cerrar sesión se borra tu acceso de este dispositivo y deberás ingresar tu correo y contraseña para volver.
@@ -127,7 +132,6 @@ export default function Perfil() {
 }
 
 const estilos = StyleSheet.create({
-  titulo: { fontSize: 26, fontWeight: '800', color: colores.texto, marginBottom: espacio.lg },
   tarjetaUsuario: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -7,11 +7,14 @@ import { Campo } from '@/components/Campo';
 import { CampoValor, estilosFormulario as estilos } from '@/components/CampoValor';
 import { Pantalla } from '@/components/Pantalla';
 import { SelectorFecha } from '@/components/SelectorFecha';
+import { useCelebraciones } from '@/context/celebraciones';
 import { api, ErrorApi, mensajeError } from '@/lib/api';
 import { hoyISO, leerValor } from '@/lib/formato';
+import type { Logro } from '@/lib/tipos';
 
 // HU-15: crear una meta de ahorro con nombre y valor objetivo.
 export default function FormularioMeta() {
+  const { celebrarLogros } = useCelebraciones();
   const [nombre, setNombre] = useState('');
   const [valor, setValor] = useState('');
   const [fechaLimite, setFechaLimite] = useState<string | null>(null);
@@ -37,13 +40,14 @@ export default function FormularioMeta() {
 
     setGuardando(true);
     try {
-      await api.post('/metas', {
+      const meta = await api.post<{ logros: Logro[] }>('/metas', {
         nombre: nombre.trim(),
         valor_objetivo: numero,
         fecha_limite: fechaLimite,
         descripcion: descripcion.trim(),
       });
       router.back();
+      celebrarLogros(meta.logros);
     } catch (e) {
       if (e instanceof ErrorApi) setErrores(e.campos);
       setErrorGeneral(mensajeError(e));

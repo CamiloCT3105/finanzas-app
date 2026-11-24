@@ -9,16 +9,18 @@ import { Dialogo } from '@/components/Dialogo';
 import { Chips } from '@/components/Opciones';
 import { Pantalla } from '@/components/Pantalla';
 import { SelectorFecha } from '@/components/SelectorFecha';
+import { useCelebraciones } from '@/context/celebraciones';
 import { iconoIngreso } from '@/lib/categorias';
 import { api, ErrorApi, mensajeError } from '@/lib/api';
 import { hoyISO, leerValor, valorATexto } from '@/lib/formato';
-import { TIPOS_INGRESO, type TipoIngreso } from '@/lib/tipos';
+import { TIPOS_INGRESO, type Logro, type TipoIngreso } from '@/lib/tipos';
 import { espacio } from '@/theme';
 
 type Parametros = { id?: string; valor?: string; tipo?: TipoIngreso; fecha?: string; descripcion?: string };
 
 // HU-04: registrar ingreso indicando su tipo. HU-08: editar o eliminar un ingreso.
 export default function FormularioIngreso() {
+  const { celebrarLogros } = useCelebraciones();
   const params = useLocalSearchParams<Parametros>();
   const editando = !!params.id;
 
@@ -45,9 +47,14 @@ export default function FormularioIngreso() {
     setGuardando(true);
     try {
       const cuerpo = { valor: leerValor(valor), tipo, fecha, descripcion: descripcion.trim() };
-      if (editando) await api.put(`/ingresos/${params.id}`, cuerpo);
-      else await api.post('/ingresos', cuerpo);
-      router.back();
+      if (editando) {
+        await api.put(`/ingresos/${params.id}`, cuerpo);
+        router.back();
+      } else {
+        const creado = await api.post<{ logros: Logro[] }>('/ingresos', cuerpo);
+        router.back();
+        celebrarLogros(creado.logros);
+      }
     } catch (e) {
       if (e instanceof ErrorApi) setErrores(e.campos);
       setErrorGeneral(mensajeError(e));

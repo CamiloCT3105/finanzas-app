@@ -47,6 +47,24 @@ export function rangoMes(valor: unknown): { mes: string; inicio: string; fin: st
   return { mes, inicio: `${mes}-01`, fin: `${siguiente}-01` };
 }
 
+/** Rango [desde, hasta] inclusivo para consultas por período (HU-31, HU-33). Por defecto, los últimos 30 días. */
+export function rangoFechas(desdeEntrada: unknown, hastaEntrada: unknown): { desde: string; hasta: string } {
+  const hasta = hastaEntrada === undefined || hastaEntrada === '' ? hoy() : fechaValida(hastaEntrada);
+  let desde: string | null;
+  if (desdeEntrada === undefined || desdeEntrada === '') {
+    const d = new Date(`${hasta ?? hoy()}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 29);
+    desde = d.toISOString().slice(0, 10);
+  } else {
+    desde = fechaValida(desdeEntrada);
+  }
+  if (!desde || !hasta) throw new ErrorApi(400, 'Las fechas deben tener el formato AAAA-MM-DD.');
+  if (desde > hasta) throw new ErrorApi(400, 'La fecha inicial no puede ser posterior a la final.');
+  const dias = (Date.parse(hasta) - Date.parse(desde)) / 86_400_000;
+  if (dias > 366) throw new ErrorApi(400, 'El período no puede superar un año.');
+  return { desde, hasta };
+}
+
 /** Fecha local de hoy en formato AAAA-MM-DD. */
 export function hoy(): string {
   const fecha = new Date();
